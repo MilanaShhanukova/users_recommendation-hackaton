@@ -9,6 +9,7 @@ users = db.users_data
 projects = db.projects
 users.drop()
 
+
 def append_user(user_info: dict):
     if user_info not in users.find():
         users.insert_one(user_info)
@@ -34,11 +35,12 @@ with open("spheres.txt", encoding="utf-8") as spheres:
 for i in range(len(users_names)):
     name = users_names[i]
     prof = professions[i]
-    sphere = areas[i]
+    sphere = areas[i].split()
 
-    user = Users_info(name, prof, sphere, random.uniform(0, 1))
+    user = Users_info(name, prof, sphere, [random.uniform(0, 1)])
     user.main_info()
     append_user(user.main_info_dict)
+
 
 for entry in users.find():
     print(entry)
