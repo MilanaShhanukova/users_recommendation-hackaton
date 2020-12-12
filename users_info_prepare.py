@@ -8,26 +8,27 @@ morph = MorphAnalyzer()
 
 
 class Users_info:
-    def __init__(self, name: str, profession: str, sphere: str):
+    def __init__(self, name: str, profession: str, sphere: str, v=0):
         self.name = name
         self.profession = profession # profession of the user
-        self.sphere = sphere # the spheres in which user is interested
-        self.gnc = gnc_relation()
+        self.spheres = sphere # the spheres in which user is interested
+        self.interest = [0] * len(self.spheres) # interests of the user in all spheres
         self.known_professions = [
             'управляющий директор',
             'вице-мэр',
             'повар',
             "разработчик"
         ]
-
+        self.projects = []
         self.known_spheres = ["IT",
                               "лингвистика",
                               "робототехника",
                               "инжинерия",
                               ]
         self.main_info_dict = {}
-        self.v = 0
+        self.v = v
         self.activity = 0
+        self.gnc = gnc_relation()
 
     def prepare_name(self):
         Name = fact(
@@ -45,28 +46,26 @@ class Users_info:
             not_(gram('Abbr')),
         )
 
-        NAME = rule(
+        NAME = rule(LAST.interpretation(
+                Name.last
+            ).match(self.gnc),
             FIRST.interpretation(
                 Name.first
-            ).match(self.gnc),
-            LAST.interpretation(
-                Name.last
             ).match(self.gnc)
         ).interpretation(
             Name
         )
 
-        NAME = rule(
+        NAME = rule(gram('Surn').interpretation(
+                Name.last.inflected()
+            ),
             gram('Name').interpretation(
                 Name.first.inflected()
-            ),
-            gram('Surn').interpretation(
-                Name.last.inflected()
             )
+
         ).interpretation(
             Name
         )
-
         name_parser = Parser(NAME)
 
         return name_parser
@@ -122,13 +121,13 @@ class Users_info:
         return professions
 
     def get_users_sphere(self):
-        word = morph.parse(self.sphere)[0].normal_form
+        word = morph.parse(self.spheres)[0].normal_form
         if word not in self.known_spheres:
             self.known_spheres.append(word)
             # update everything with new spheres
 
         name_parser = self.prepare_sphere()
-        matched_sphere = name_parser.findall(self.sphere)
+        matched_sphere = name_parser.findall(self.spheres)
         spheres = [match.fact.domen for match in matched_sphere]
         return spheres
 
@@ -146,5 +145,7 @@ class Users_info:
         matched_name_ = self.prepare_name().findall(self.name)
         self.main_info_dict["name_first"] = "".join([match.fact.first for match in matched_name])
         self.main_info_dict["name_second"] = "".join([match.fact.last for match in matched_name_])
-
-
+        if not self.main_info_dict["name_first"]:
+            self.main_info_dict["name_first"] = self.name.split()[0].lower()
+            self.main_info_dict["name_second"] = self.name.split()[1].lower()
+        self.main_info_dict["activity"] = self.activity
