@@ -6,13 +6,19 @@ from yargy.pipelines import morph_pipeline
 from pymorphy2 import MorphAnalyzer
 morph = MorphAnalyzer()
 
-
+#from system
+known_spheres = ["IT",
+                 "лингвистика",
+                 "робототехника",
+                 "инжинерия"]
 class Users_info:
-    def __init__(self, name: str, profession: str, sphere: str, v=0):
+    def __init__(self, name: str, profession: str, sphere: list, v:list):
         self.name = name
         self.profession = profession # profession of the user
-        self.spheres = sphere # the spheres in which user is interested
-        self.interest = [0] * len(self.spheres) # interests of the user in all spheres
+        self.spheres = sphere
+        self.spheres_v = {} # the spheres in which user is interested
+        self.interests = [0] * len(self.spheres) # interests of the user in all spheres
+        self.interests_spheres = {}
         self.known_professions = [
             'управляющий директор',
             'вице-мэр',
@@ -20,11 +26,7 @@ class Users_info:
             "разработчик"
         ]
         self.projects = []
-        self.known_spheres = ["IT",
-                              "лингвистика",
-                              "робототехника",
-                              "инжинерия",
-                              ]
+        #self.known_spheres =
         self.main_info_dict = {}
         self.v = v
         self.activity = 0
@@ -95,7 +97,7 @@ class Users_info:
             ["domen"]
         )
 
-        SPHERE = morph_pipeline(self.known_spheres)
+        SPHERE = morph_pipeline(known_spheres)
 
         SPHERE = rule(
             SPHERE.interpretation(
@@ -121,24 +123,34 @@ class Users_info:
         return professions
 
     def get_users_sphere(self):
-        word = morph.parse(self.spheres)[0].normal_form
-        if word not in self.known_spheres:
-            self.known_spheres.append(word)
-            # update everything with new spheres
+        # append new spheres in spheres_v
+        for s in self.spheres:
+            # clean form of s
+            clean_s = morph.parse(s)[0].normal_form
 
-        name_parser = self.prepare_sphere()
-        matched_sphere = name_parser.findall(self.spheres)
-        spheres = [match.fact.domen for match in matched_sphere]
-        return spheres
+            if clean_s not in known_spheres:
+                known_spheres.append(clean_s)
+            try:
+                self.spheres_v[clean_s] = self.v[self.spheres.index(s)]
+            except KeyError:
+                self.spheres_v[clean_s] = 0
 
-    def update_users_v(self, update_num: float):
-        self.v += update_num
+        #name_parser = self.prepare_sphere()
+        #matched_sphere = name_parser.findall(self.spheres)
+        #spheres = [match.fact.domen for match in matched_sphere]
+
+    def update_users_v(self, update_num: float, sphere: str):
+        try:
+            self.spheres_v[sphere] += update_num
+        except KeyError:
+            self.spheres_v[sphere] = update_num
 
     def calculate_activity(self, update_num: float):
         self.activity += update_num
 
     def main_info(self):
-        self.main_info_dict["sphere"] = self.get_users_sphere()
+        self.get_users_sphere()
+        self.main_info_dict["spheres"] = self.spheres_v
         self.main_info_dict["profession"] = self.get_users_professions()
 
         matched_name = self.prepare_name().findall(self.name)
@@ -149,3 +161,5 @@ class Users_info:
             self.main_info_dict["name_first"] = self.name.split()[0].lower()
             self.main_info_dict["name_second"] = self.name.split()[1].lower()
         self.main_info_dict["activity"] = self.activity
+        #self.main_info_dict["v"] = self.v
+        self.main_info_dict["projects"] = self.projects
