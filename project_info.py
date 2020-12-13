@@ -7,12 +7,12 @@ db = client.mongo_bd
 users = db.users_data
 projects = db.projects
 
-
+# class for every project
 class Project:
-    def __init__(self, name: str, sphere: str, main_creator, r=0, other_creators=[]):
+    def __init__(self, name: str, sphere: str, main_creator, r=0, other_creators=list()):
         self.name = name
         self.sphere = sphere
-        self.r = r
+        self.r = r # save r
         self.creators = other_creators
         self.label = 0 # idea - 0, project - 1
         self.main_creator = main_creator # object user
@@ -28,6 +28,7 @@ class Project:
         self.r += v_user
 
     def make_idea_project(self):
+        # compare with other projects in this sphere
         same_projects_rs = [project.r ** (-project.main_creator.v)
                             for project in projects.find() if project.spheres == self.sphere]
 
