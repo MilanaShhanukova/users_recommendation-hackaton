@@ -11,6 +11,7 @@ known_spheres = ["IT",
                  "лингвистика",
                  "робототехника",
                  "инжинерия"]
+
 class Users_info:
     def __init__(self, name: str, profession: str, sphere: list, v:list):
         self.name = name
@@ -135,10 +136,6 @@ class Users_info:
             except KeyError:
                 self.spheres_v[clean_s] = 0
 
-        #name_parser = self.prepare_sphere()
-        #matched_sphere = name_parser.findall(self.spheres)
-        #spheres = [match.fact.domen for match in matched_sphere]
-
     def update_users_v(self, update_num: float, sphere: str):
         try:
             self.spheres_v[sphere] += update_num
@@ -161,5 +158,4 @@ class Users_info:
             self.main_info_dict["name_first"] = self.name.split()[0].lower()
             self.main_info_dict["name_second"] = self.name.split()[1].lower()
         self.main_info_dict["activity"] = self.activity
-        #self.main_info_dict["v"] = self.v
         self.main_info_dict["projects"] = self.projects
